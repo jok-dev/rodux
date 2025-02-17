@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Selene from jok-dev/selene
+      - name: Install Selene
         run: |
           wget https://github.com/jok-dev/selene/releases/download/0.29.1/selene-0.29.1-linux.zip
           unzip selene-0.29.1-linux.zip
@@ -19,10 +19,14 @@ jobs:
       - name: Run Selene
         id: selene
         run: |
-          SELENE_OUTPUT=$(selene src/ 2>&1) || true
+          SELENE_OUTPUT=$(selene src/ 2>&1)
+          SELENE_EXIT_CODE=$?
+          
           echo 'SELENE_OUTPUT<<EOF' >> $GITHUB_ENV
           echo "$SELENE_OUTPUT" >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
+          
+          echo "SELENE_EXIT_CODE=$SELENE_EXIT_CODE" >> $GITHUB_ENV
 
       - name: Comment on Pull Request
         if: github.event_name == 'pull_request'
@@ -34,3 +38,7 @@ jobs:
             ```
             ${{ env.SELENE_OUTPUT }}
             ```
+
+      - name: Check for Selene errors
+        if: env.SELENE_EXIT_CODE != '0'
+        run: exit 1
