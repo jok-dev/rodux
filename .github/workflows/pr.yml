@@ -19,7 +19,7 @@ jobs:
       - name: Run Selene
         id: selene
         run: |
-          selene src/ > selene_output.txt 2>&1 || true
+          FORCE_COLOR=1 selene src/ > selene_output.txt 2>&1 || true
           cat selene_output.txt
           
           echo 'SELENE_OUTPUT<<EOF' >> $GITHUB_ENV
