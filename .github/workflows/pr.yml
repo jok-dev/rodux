@@ -18,6 +18,7 @@ jobs:
 
       - name: Run Selene
         id: selene
+        continue-on-error: true
         run: |
           SELENE_OUTPUT=$(selene src/ 2>&1)
           SELENE_EXIT_CODE=$?
