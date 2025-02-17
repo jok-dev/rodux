@@ -1,4 +1,4 @@
-std = "roblox+testez"
+std = "roblox"
 
 [config]
 empty_if = { comments_count = true }
@@ -12,6 +12,7 @@ shadowing = { ignore_pattern = "result|ok|^_" }
 # remove this once the feature request here is implemented: https://github.com/Kampfkarren/selene/issues/181
 global_usage = "allow"
 unused_variable = "allow"
+undefined_variable = "allow"
 # remove when the Luau type narrowing issues (and the workarounds) are resolved
 shadowing = "allow"
 
