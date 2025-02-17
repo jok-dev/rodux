@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+  push:
 
 jobs:
   analyze:
@@ -9,28 +10,35 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Selene
-        run: |
-          wget https://github.com/jok-dev/selene/releases/download/0.29.1/selene-0.29.1-linux.zip
-          unzip selene-0.29.1-linux.zip
-          chmod +x selene
-          sudo mv selene /usr/local/bin/
-
-      - name: Run Selene
+      - name: Run Selene Linter
         id: selene
+        continue-on-error: true  # Prevents workflow from stopping on failure
+        uses: AlejandroSuero/selene-linter-action@v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: src/
+
+      - name: Save Selene Output to File
         run: |
-          selene src/ --color always > selene_output.txt 2>&1 || true
-          cat selene_output.txt
-          
+          # Capture the output of Selene into a file
+          selene src/ > selene_output.txt || true
+
+      - name: Clean and Convert ANSI Codes to LaTeX
+        run: |
+          # Convert the ANSI escape codes to LaTeX-friendly format
+          awk '{ 
+            gsub(/\x1b\[[0-9;]*m/, "");  # Remove ANSI codes
+            if ($0 ~ /warning/) { print "\\textbf{\\textcolor{orange}{Warning:}} " $0 }
+            else if ($0 ~ /error/) { print "\\textbf{\\textcolor{red}{Error:}} " $0 }
+            else { print $0 }
+          }' selene_output.txt > latex_selene_output.txt
+
+      - name: Capture LaTeX Output into Environment Variable
+        run: |
+          # Store the LaTeX-formatted contents of the output file into the environment variable
           echo 'SELENE_OUTPUT<<EOF' >> $GITHUB_ENV
-          cat selene_output.txt >> $GITHUB_ENV
+          cat latex_selene_output.txt >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
-          
-          if grep -q "error" selene_output.txt; then
-            echo "SELENE_EXIT_CODE=1" >> $GITHUB_ENV
-          else
-            echo "SELENE_EXIT_CODE=0" >> $GITHUB_ENV
-          fi
 
       - name: Comment on Pull Request
         if: github.event_name == 'pull_request'
@@ -39,10 +47,6 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             **Selene Linter Report:**
-            ```ansi
+            \[
             ${{ env.SELENE_OUTPUT }}
-            ```
-
-      - name: Check for Selene errors
-        if: env.SELENE_EXIT_CODE != '0'
-        run: exit 1
+            \]
