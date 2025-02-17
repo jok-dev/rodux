@@ -39,7 +39,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             **Selene Linter Report:**
-            ```
+            ```ansi
             ${{ env.SELENE_OUTPUT }}
             ```
 
