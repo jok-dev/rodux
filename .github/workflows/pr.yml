@@ -18,14 +18,15 @@ jobs:
 
       - name: Run Selene
         id: selene
-        continue-on-error: true
         run: |
-          OUTPUT=$(selene src/ 2>&1)
-          echo "$OUTPUT"
+          selene src/ > selene_output.txt 2>&1 || true
+          cat selene_output.txt
+          
           echo 'SELENE_OUTPUT<<EOF' >> $GITHUB_ENV
-          echo "$OUTPUT" >> $GITHUB_ENV
+          cat selene_output.txt >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
-          if [ $? -ne 0 ]; then
+          
+          if grep -q "error" selene_output.txt; then
             echo "SELENE_EXIT_CODE=1" >> $GITHUB_ENV
           else
             echo "SELENE_EXIT_CODE=0" >> $GITHUB_ENV
