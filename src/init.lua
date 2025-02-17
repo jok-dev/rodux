@@ -32,5 +32,3 @@ return {
 	thunkMiddleware = thunkMiddleware,
 	makeThunkMiddleware = makeThunkMiddleware,
 }
-
-thbis is an error

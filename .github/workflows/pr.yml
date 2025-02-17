@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run Selene Linter
+        id: selene
+        uses: AlejandroSuero/selene-linter-action@v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: src/ | tee selene_output.txt
+
+      - name: Format Output
+        run: |
+          echo 'SELENE_OUTPUT<<EOF' >> $GITHUB_ENV
+          cat selene_output.txt >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+      - name: Comment on Pull Request
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            **Selene Linter Report:**
+            ```
+            ${{ env.SELENE_OUTPUT }}
+            ```
+          reactions: "+1"
