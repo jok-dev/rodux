@@ -2,7 +2,6 @@ name: CI
 
 on:
   pull_request:
-  push:
 
 jobs:
   analyze:
@@ -10,23 +9,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run Selene Linter
-        id: selene
-        continue-on-error: true  # Prevents workflow from stopping on failure
-        uses: AlejandroSuero/selene-linter-action@v1.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: src/
-        # Capture stdout and stderr into a file
+      - name: Install Selene from jok-dev/selene
         run: |
-          output=$(selene src/ 2>&1)
-          echo "$output" > selene_output.txt
-          echo "$output" | tee selene_output.txt
+          wget https://github.com/jok-dev/selene/releases/download/0.29.1/selene-0.29.1-linux.zip
+          unzip selene-0.29.1-linux.zip
+          chmod +x selene
+          sudo mv selene /usr/local/bin/
 
-      - name: Capture Selene Output
+      - name: Run Selene
+        id: selene
         run: |
+          SELENE_OUTPUT=$(selene src/ 2>&1) || true
           echo 'SELENE_OUTPUT<<EOF' >> $GITHUB_ENV
-          cat selene_output.txt >> $GITHUB_ENV
+          echo "$SELENE_OUTPUT" >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
       - name: Comment on Pull Request
