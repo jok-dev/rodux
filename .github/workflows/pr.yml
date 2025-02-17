@@ -11,16 +11,17 @@ jobs:
 
       - name: Run Selene Linter
         id: selene
+        continue-on-error: true  # Prevents workflow from stopping on failure
         uses: AlejandroSuero/selene-linter-action@v1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: src/ | tee selene_output.txt || true # Prevents executable exit code error skipping later steps
-        continue-on-error: true
-
+          args: src/
+      
       - name: Capture Selene Output
         run: |
+          # Capture the output of the previous step (the linter action)
           echo 'SELENE_OUTPUT<<EOF' >> $GITHUB_ENV
-          cat selene_output.txt >> $GITHUB_ENV
+          echo "${{ steps.selene.outputs.output }}" >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
       - name: Comment on Pull Request
