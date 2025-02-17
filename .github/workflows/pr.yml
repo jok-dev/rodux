@@ -24,12 +24,12 @@ jobs:
 
       - name: Clean and Convert ANSI Codes to LaTeX
         run: |
-          # Convert the ANSI escape codes to GitHub-compatible LaTeX formatting
+          # Convert the ANSI escape codes to LaTeX math format for GitHub rendering
           awk '{ 
             gsub(/\x1b\[[0-9;]*m/, "");  # Remove ANSI codes
-            if ($0 ~ /warning/) { print "\\textcolor{orange}{\\huge{Warning:}} " $0 }
-            else if ($0 ~ /error/) { print "\\textcolor{red}{\\huge{Error:}} " $0 }
-            else { print "\\textcolor{black}{\\huge{" $0 "}}" }
+            if ($0 ~ /warning/) { print "\\textbf{\\textcolor{orange}{Warning:}} " $0 }
+            else if ($0 ~ /error/) { print "\\textbf{\\textcolor{red}{Error:}} " $0 }
+            else { print $0 }
           }' selene_output.txt > latex_selene_output.txt
 
       - name: Capture LaTeX Output into Environment Variable
@@ -46,4 +46,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             **Selene Linter Report:**
+            \(\textbf{Warning:} The following issues were found\) 
+            \[
             ${{ env.SELENE_OUTPUT }}
+            \]
