@@ -14,15 +14,16 @@ jobs:
         uses: AlejandroSuero/selene-linter-action@v1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: src/ | tee selene_output.txt
+          args: src/ | tee selene_output.txt || true # Prevents executable exit code error skipping later steps
 
-      - name: Format Output
+      - name: Capture Selene Output
         run: |
           echo 'SELENE_OUTPUT<<EOF' >> $GITHUB_ENV
           cat selene_output.txt >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
       - name: Comment on Pull Request
+        if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v3
         with:
           issue-number: ${{ github.event.pull_request.number }}
