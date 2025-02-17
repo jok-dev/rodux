@@ -15,6 +15,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: src/ | tee selene_output.txt || true # Prevents executable exit code error skipping later steps
+        continue-on-error: true
 
       - name: Capture Selene Output
         run: |
