@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+  push:
 
 jobs:
   analyze:
@@ -16,12 +17,16 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: src/
-      
+        # Capture stdout and stderr into a file
+        run: |
+          output=$(selene src/ 2>&1)
+          echo "$output" > selene_output.txt
+          echo "$output" | tee selene_output.txt
+
       - name: Capture Selene Output
         run: |
-          # Capture the output of the previous step (the linter action)
           echo 'SELENE_OUTPUT<<EOF' >> $GITHUB_ENV
-          echo "${{ steps.selene.outputs.output }}" >> $GITHUB_ENV
+          cat selene_output.txt >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
       - name: Comment on Pull Request
@@ -34,4 +39,3 @@ jobs:
             ```
             ${{ env.SELENE_OUTPUT }}
             ```
-          reactions: "+1"
