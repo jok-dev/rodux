@@ -1,4 +1,4 @@
-name: CI
+name: Selene PR Lint Check
 
 on:
   pull_request:
