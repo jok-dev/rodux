@@ -9,18 +9,28 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run Selene Linter
-        id: selene
-        uses: AlejandroSuero/selene-linter-action@v1.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: src/ | tee selene_output.txt || true # Prevents executable exit code error skipping later steps
-
-      - name: Capture Selene Output
+      - name: Install Selene
         run: |
+          wget https://github.com/jok-dev/selene/releases/download/0.29.1/selene-0.29.1-linux.zip
+          unzip selene-0.29.1-linux.zip
+          chmod +x selene
+          sudo mv selene /usr/local/bin/
+
+      - name: Run Selene
+        id: selene
+        run: |
+          selene src/ > selene_output.txt 2>&1 || true
+          cat selene_output.txt
+          
           echo 'SELENE_OUTPUT<<EOF' >> $GITHUB_ENV
           cat selene_output.txt >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
+          
+          if grep -q "error" selene_output.txt; then
+            echo "SELENE_EXIT_CODE=1" >> $GITHUB_ENV
+          else
+            echo "SELENE_EXIT_CODE=0" >> $GITHUB_ENV
+          fi
 
       - name: Comment on Pull Request
         if: github.event_name == 'pull_request'
@@ -29,7 +39,10 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             **Selene Linter Report:**
-            ```
+            ```ansi
             ${{ env.SELENE_OUTPUT }}
             ```
-          reactions: "+1"
+
+      - name: Check for Selene errors
+        if: env.SELENE_EXIT_CODE != '0'
+        run: exit 1
